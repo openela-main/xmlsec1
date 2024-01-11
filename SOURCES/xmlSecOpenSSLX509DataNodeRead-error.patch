@@ -1,0 +1,55 @@
+Please see this bug report for full details:
+https://github.com/lsh123/xmlsec/issues/164
+
+commit e303e077fb3e13654ba711b2816ff1a94247338b
+Author: lsh123 <aleksey@aleksey.com>
+Date:   Wed Apr 11 17:13:43 2018 -1000
+
+    Add missing return(-1). (#165)
+    
+    Fixed issue #164. All other crypto libraries are ok.
+
+diff --git a/src/openssl/x509.c b/src/openssl/x509.c
+index 15fe70db..b98e62d1 100644
+--- a/src/openssl/x509.c
++++ b/src/openssl/x509.c
+@@ -870,6 +870,7 @@ xmlSecOpenSSLX509DataNodeRead(xmlSecKeyDataPtr data, xmlNodePtr node, xmlSecKeyI
+                 xmlSecInternalError2("xmlSecOpenSSLX509CertificateNodeRead",
+                                      xmlSecKeyDataGetName(data),
+                                      "node=%s", xmlSecErrorsSafeString(xmlSecNodeGetName(cur)));
++                return(-1);
+             }
+         } else if(xmlSecCheckNodeName(cur, xmlSecNodeX509SubjectName, xmlSecDSigNs)) {
+             ret = xmlSecOpenSSLX509SubjectNameNodeRead(data, cur, keyInfoCtx);
+@@ -877,6 +878,7 @@ xmlSecOpenSSLX509DataNodeRead(xmlSecKeyDataPtr data, xmlNodePtr node, xmlSecKeyI
+                 xmlSecInternalError2("xmlSecOpenSSLX509SubjectNameNodeRead",
+                                      xmlSecKeyDataGetName(data),
+                                      "node=%s", xmlSecErrorsSafeString(xmlSecNodeGetName(cur)));
++                return(-1);
+             }
+         } else if(xmlSecCheckNodeName(cur, xmlSecNodeX509IssuerSerial, xmlSecDSigNs)) {
+             ret = xmlSecOpenSSLX509IssuerSerialNodeRead(data, cur, keyInfoCtx);
+@@ -884,6 +886,7 @@ xmlSecOpenSSLX509DataNodeRead(xmlSecKeyDataPtr data, xmlNodePtr node, xmlSecKeyI
+                 xmlSecInternalError2("xmlSecOpenSSLX509IssuerSerialNodeRead",
+                                      xmlSecKeyDataGetName(data),
+                                      "node=%s", xmlSecErrorsSafeString(xmlSecNodeGetName(cur)));
++                return(-1);
+             }
+         } else if(xmlSecCheckNodeName(cur, xmlSecNodeX509SKI, xmlSecDSigNs)) {
+             ret = xmlSecOpenSSLX509SKINodeRead(data, cur, keyInfoCtx);
+@@ -891,6 +894,7 @@ xmlSecOpenSSLX509DataNodeRead(xmlSecKeyDataPtr data, xmlNodePtr node, xmlSecKeyI
+                 xmlSecInternalError2("xmlSecOpenSSLX509SKINodeRead",
+                                      xmlSecKeyDataGetName(data),
+                                      "node=%s", xmlSecErrorsSafeString(xmlSecNodeGetName(cur)));
++                return(-1);
+             }
+         } else if(xmlSecCheckNodeName(cur, xmlSecNodeX509CRL, xmlSecDSigNs)) {
+             ret = xmlSecOpenSSLX509CRLNodeRead(data, cur, keyInfoCtx);
+@@ -898,6 +902,7 @@ xmlSecOpenSSLX509DataNodeRead(xmlSecKeyDataPtr data, xmlNodePtr node, xmlSecKeyI
+                 xmlSecInternalError2("xmlSecOpenSSLX509CRLNodeRead",
+                                      xmlSecKeyDataGetName(data),
+                                      "node=%s", xmlSecErrorsSafeString(xmlSecNodeGetName(cur)));
++                return(-1);
+             }
+         } else if((keyInfoCtx->flags & XMLSEC_KEYINFO_FLAGS_X509DATA_STOP_ON_UNKNOWN_CHILD) != 0) {
+             /* laxi schema validation: ignore unknown nodes */
