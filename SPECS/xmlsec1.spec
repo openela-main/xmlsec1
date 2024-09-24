@@ -1,7 +1,7 @@
 Summary: Library providing support for "XML Signature" and "XML Encryption" standards
 Name: xmlsec1
 Version: 1.2.25
-Release: 4%{?dist}%{?extra_release}
+Release: 8%{?dist}%{?extra_release}
 License: MIT
 Source0: http://www.aleksey.com/xmlsec/download/xmlsec1-%{version}.tar.gz
 URL: http://www.aleksey.com/xmlsec/
@@ -18,7 +18,7 @@ BuildRequires: autoconf
 BuildRequires: automake
 BuildRequires: gettext-devel
 BuildRequires: libtool
-
+Patch0: 0001-resource-leaks.patch
 Patch1: xmlSecOpenSSLX509DataNodeRead-error.patch
 
 %description
@@ -70,6 +70,7 @@ Libraries, includes, etc. for developing XML Security applications with GCrypt.
 %package gnutls
 Summary: GNUTls crypto plugin for XML Security Library
 Requires: xmlsec1%{?_isa} = %{version}-%{release}
+Requires: xmlsec1-gcrypt%{?_isa} = %{version}-%{release}
 
 %description gnutls
 GNUTls plugin for XML Security Library provides GNUTls based crypto services
@@ -102,8 +103,7 @@ Requires: xmlsec1-nss%{?_isa} = %{version}-%{release}
 Libraries, includes, etc. for developing XML Security applications with NSS.
 
 %prep
-%setup -q
-%patch1 -p1
+%autosetup -p1
 
 %build
 autoreconf -vfi
@@ -180,6 +180,22 @@ mv %{buildroot}%{_docdir}/xmlsec1/* __tmp_doc
 %{_libdir}/pkgconfig/xmlsec1-nss.pc
 
 %changelog
+* Fri May 31 2024 Tomas Halman <thalman@redhat.com> - 1.2.25-8
+- Add gating tests
+  Related: RHEL-36185
+
+* Mon May 20 2024 Tomas Halman <thalman@redhat.com> - 1.2.25-7
+- Fix adopt function the same way as in upstream
+  Related: RHEL-36185
+
+* Fri May 17 2024 Tomas Halman <thalman@redhat.com> - 1.2.25-6
+- Add xmlsec1-gnutls dependency on xmlsec1-gcrypt
+  Related: RHEL-36185
+
+* Mon May 13 2024 Tomas Halman <thalman@redhat.com> - 1.2.25-5
+- Fix memory leaks found by SAST
+  Resolves: RHEL-36185
+
 * Thu Apr 12 2018 John Dennis <jdennis@redhat.com> - 1.2.25-4
 - Resolves: rhbz#1566748
   xmlSecOpenSSLX509DataNodeRead fails to return error

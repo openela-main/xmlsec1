@@ -1,0 +1,88 @@
+diff -up xmlsec1-1.2.25/src/c14n.c.orig xmlsec1-1.2.25/src/c14n.c
+--- xmlsec1-1.2.25/src/c14n.c.orig	2017-09-12 15:21:09.000000000 +0200
++++ xmlsec1-1.2.25/src/c14n.c	2024-05-14 09:55:35.800202266 +0200
+@@ -228,7 +228,10 @@ xmlSecTransformC14NPushXml(xmlSecTransfo
+     /* we are using a semi-hack here: we know that xmlSecPtrList keeps
+      * all pointers in the big array */
+     nsList = xmlSecTransformC14NGetNsList(transform);
+-    xmlSecAssert2(xmlSecPtrListCheckId(nsList, xmlSecStringListId), -1);
++    if (! xmlSecPtrListCheckId(nsList, xmlSecStringListId)) {
++        xmlOutputBufferClose(buf);
++        xmlSecAssert2(0, -1);
++    };
+ 
+     ret = xmlSecTransformC14NExecute(transform->id, nodes, (xmlChar**)(nsList->data), buf);
+     if(ret < 0) {
+@@ -292,7 +295,10 @@ xmlSecTransformC14NPopBin(xmlSecTransfor
+         /* we are using a semi-hack here: we know that xmlSecPtrList keeps
+          * all pointers in the big array */
+         nsList = xmlSecTransformC14NGetNsList(transform);
+-        xmlSecAssert2(xmlSecPtrListCheckId(nsList, xmlSecStringListId), -1);
++        if (! xmlSecPtrListCheckId(nsList, xmlSecStringListId)) {
++            xmlOutputBufferClose(buf);
++            xmlSecAssert2(0, -1);
++        }
+ 
+         ret = xmlSecTransformC14NExecute(transform->id, transform->inNodes, (xmlChar**)(nsList->data), buf);
+         if(ret < 0) {
+@@ -732,4 +738,3 @@ xmlSecTransformId
+ xmlSecTransformRemoveXmlTagsC14NGetKlass(void) {
+     return(&xmlSecTransformRemoveXmlTagsC14NKlass);
+ }
+-
+diff -up xmlsec1-1.2.25/src/gcrypt/asymkeys.c.orig xmlsec1-1.2.25/src/gcrypt/asymkeys.c
+--- xmlsec1-1.2.25/src/gcrypt/asymkeys.c.orig	2017-09-12 15:21:09.000000000 +0200
++++ xmlsec1-1.2.25/src/gcrypt/asymkeys.c	2024-05-14 09:55:35.801202265 +0200
+@@ -186,6 +186,9 @@ xmlSecGCryptAsymKeyDataAdoptKey(xmlSecKe
+     pub_key = NULL; /* data owns it now */
+     priv_key = NULL; /* data owns it now */
+ 
++    /* Adopt functions assume ownership thus the caller would expect this to be released */
++    gcry_sexp_release(key_pair);
++
+     /* success */
+     res = 0;
+ 
+diff -up xmlsec1-1.2.25/src/parser.c.orig xmlsec1-1.2.25/src/parser.c
+--- xmlsec1-1.2.25/src/parser.c.orig	2017-09-12 15:21:09.000000000 +0200
++++ xmlsec1-1.2.25/src/parser.c	2024-05-14 09:55:35.802202264 +0200
+@@ -354,7 +354,6 @@ xmlDocPtr
+ xmlSecParseFile(const char *filename) {
+     xmlParserCtxtPtr ctxt;
+     xmlDocPtr res = NULL;
+-    char *directory = NULL;
+     int ret;
+ 
+     xmlSecAssert2(filename != NULL, NULL);
+@@ -371,23 +370,15 @@ xmlSecParseFile(const char *filename) {
+     /* crashes on x64 xmlCtxtUseOptions (ctxt, XML_PARSE_HUGE); */
+ 
+     /* todo: set directories from current doc? */
+-    if ((ctxt->directory == NULL) && (directory == NULL)) {
+-        directory = xmlParserGetDirectory(filename);
+-        if(directory == NULL) {
++    if (ctxt->directory == NULL) {
++        ctxt->directory = xmlParserGetDirectory(filename);
++        if(ctxt->directory == NULL) {
+             xmlSecXmlError2("xmlParserGetDirectory", NULL,
+                             "filename=%s", xmlSecErrorsSafeString(filename));
+             xmlFreeParserCtxt(ctxt);
+             return(NULL);
+         }
+     }
+-    if ((ctxt->directory == NULL) && (directory != NULL)) {
+-        ctxt->directory = (char *) xmlStrdup(BAD_CAST directory);
+-        if(ctxt->directory == NULL) {
+-            xmlSecStrdupError(BAD_CAST directory, NULL);
+-            xmlFreeParserCtxt(ctxt);
+-            return(NULL);
+-        }
+-    }
+ 
+     /* required for c14n! */
+     ctxt->loadsubset = XML_DETECT_IDS | XML_COMPLETE_ATTRS;
+@@ -547,4 +538,3 @@ xmlSecParseMemory(const xmlSecByte *buff
+     xmlFreeParserCtxt(ctxt);
+     return(res);
+ }
+-
